@@ -1,100 +1,856 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Safety Suit Detector</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
     <style>
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      :root {
+        --teal: #00f5d4;
+        --pink: #f72585;
+        --orange: #ff9f1c;
+        --blue: #4361ee;
+        --dark: #0d0d1a;
+        --white: #ffffff;
+      }
+
       body {
-        font-family: Arial, sans-serif;
-        text-align: center;
-        padding: 40px;
-        background: #1a1a2e;
-        color: white;
+        font-family: "DM Sans", sans-serif;
+        background: var(--dark);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+        overflow-x: hidden;
+        position: relative;
       }
-      .container {
+
+      /* Animated background */
+      .bg-canvas {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        background:
+          radial-gradient(
+            ellipse 80% 60% at 15% 15%,
+            #7b2d8b55 0%,
+            transparent 55%
+          ),
+          radial-gradient(
+            ellipse 60% 70% at 88% 8%,
+            #4361ee55 0%,
+            transparent 55%
+          ),
+          radial-gradient(
+            ellipse 65% 50% at 80% 85%,
+            #f7258533 0%,
+            transparent 60%
+          ),
+          radial-gradient(
+            ellipse 50% 65% at 5% 88%,
+            #00f5d433 0%,
+            transparent 55%
+          ),
+          radial-gradient(
+            ellipse 55% 55% at 50% 50%,
+            #ff9f1c1a 0%,
+            transparent 70%
+          ),
+          var(--dark);
+        animation: bgShift 12s ease-in-out infinite alternate;
+      }
+      @keyframes bgShift {
+        0% {
+          filter: hue-rotate(0deg) brightness(1);
+        }
+        50% {
+          filter: hue-rotate(20deg) brightness(1.05);
+        }
+        100% {
+          filter: hue-rotate(-15deg) brightness(0.95);
+        }
+      }
+      .bg-grid {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+          linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.025) 1px,
+            transparent 1px
+          );
+        background-size: 48px 48px;
+      }
+      .orb {
+        position: fixed;
+        border-radius: 50%;
+        filter: blur(80px);
+        z-index: 0;
+        pointer-events: none;
+        animation: floatOrb 10s ease-in-out infinite alternate;
+      }
+      .orb-1 {
+        width: 300px;
+        height: 300px;
+        background: #f7258540;
+        top: -80px;
+        left: -80px;
+        animation-delay: 0s;
+      }
+      .orb-2 {
+        width: 240px;
+        height: 240px;
+        background: #4361ee40;
+        bottom: -60px;
+        right: -60px;
+        animation-delay: -4s;
+      }
+      .orb-3 {
+        width: 180px;
+        height: 180px;
+        background: #00f5d430;
+        top: 55%;
+        left: 65%;
+        animation-delay: -7s;
+      }
+      @keyframes floatOrb {
+        0% {
+          transform: translate(0, 0) scale(1);
+        }
+        50% {
+          transform: translate(30px, -20px) scale(1.05);
+        }
+        100% {
+          transform: translate(-10px, 30px) scale(0.95);
+        }
+      }
+
+      /* Card */
+      .card {
+        position: relative;
+        z-index: 1;
+        width: 100%;
         max-width: 600px;
-        margin: 0 auto;
-        background: #16213e;
-        padding: 30px;
-        border-radius: 15px;
+        background: rgba(255, 255, 255, 0.06);
+        backdrop-filter: blur(24px);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 22px;
+        padding: 40px 36px 36px;
+        animation: fadeUp 0.6s ease both;
       }
-      input[type="file"] {
-        margin: 20px 0;
-        padding: 10px;
+      .card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 10%;
+        right: 10%;
+        height: 3px;
+        background: linear-gradient(
+          90deg,
+          var(--orange),
+          var(--pink),
+          var(--blue)
+        );
+        border-radius: 0 0 6px 6px;
       }
-      button {
-        background: #0ea5e9;
-        color: white;
-        border: none;
-        padding: 12px 30px;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 16px;
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(24px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
-      button:hover {
-        background: #0284c7;
+
+      /* Header */
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 999px;
+        padding: 4px 14px;
+        margin-bottom: 16px;
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: var(--orange);
       }
-      #result {
-        margin-top: 20px;
+      .pill-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--orange);
+        box-shadow: 0 0 6px var(--orange);
+        animation: pulse 2s ease-in-out infinite;
       }
-      img {
-        max-width: 100%;
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.3;
+        }
+      }
+      h1 {
+        font-family: "Syne", sans-serif;
+        font-size: clamp(1.7rem, 4vw, 2.4rem);
+        font-weight: 800;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        color: var(--white);
+        margin-bottom: 8px;
+      }
+      h1 span {
+        background: linear-gradient(
+          90deg,
+          var(--orange),
+          var(--pink),
+          var(--blue)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .subtitle {
+        font-size: 14px;
+        font-weight: 300;
+        color: rgba(255, 255, 255, 0.45);
+        margin-bottom: 24px;
+      }
+
+      /* Source tabs */
+      .tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 18px;
+      }
+      .tab {
+        flex: 1;
+        padding: 9px 14px;
         border-radius: 10px;
-        margin-top: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.45);
+        font-family: "DM Sans", sans-serif;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
       }
-      #status {
-        font-weight: bold;
-        margin-top: 15px;
+      .tab:hover {
+        background: rgba(255, 255, 255, 0.09);
+        color: rgba(255, 255, 255, 0.75);
+      }
+      .tab.active-upload {
+        background: rgba(255, 159, 28, 0.15);
+        border-color: rgba(255, 159, 28, 0.4);
+        color: var(--orange);
+      }
+      .tab.active-cam {
+        background: rgba(0, 245, 212, 0.1);
+        border-color: rgba(0, 245, 212, 0.35);
+        color: var(--teal);
+      }
+      .tab svg {
+        width: 15px;
+        height: 15px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 1.6;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        flex-shrink: 0;
+      }
+
+      /* Upload zone */
+      .upload-zone {
+        border: 1.5px dashed rgba(255, 255, 255, 0.18);
+        border-radius: 14px;
+        padding: 28px 20px;
+        text-align: center;
+        cursor: pointer;
+        transition:
+          border-color 0.2s,
+          background 0.2s;
+        background: rgba(0, 0, 0, 0.2);
+        margin-bottom: 16px;
+        position: relative;
+      }
+      .upload-zone:hover {
+        border-color: var(--orange);
+        background: rgba(255, 159, 28, 0.05);
+      }
+      .upload-zone input[type="file"] {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+        width: 100%;
+        height: 100%;
+      }
+      .upload-icon {
+        width: 40px;
+        height: 40px;
+        margin: 0 auto 10px;
+        background: rgba(255, 159, 28, 0.15);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .upload-icon svg {
+        width: 20px;
+        height: 20px;
+        stroke: var(--orange);
+        fill: none;
+        stroke-width: 1.6;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .upload-label {
+        font-size: 14px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.7);
+      }
+      .upload-sub {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.3);
+        margin-top: 4px;
+      }
+      #fileName {
+        font-size: 12px;
+        color: var(--orange);
+        margin-top: 6px;
+        font-weight: 500;
+        min-height: 16px;
+      }
+
+      /* Webcam zone */
+      .webcam-zone {
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1.5px solid rgba(0, 245, 212, 0.2);
+        background: rgba(0, 0, 0, 0.35);
+        margin-bottom: 16px;
+        position: relative;
+      }
+      .webcam-placeholder {
+        min-height: 260px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        color: rgba(255, 255, 255, 0.25);
+        font-size: 13px;
+      }
+      .webcam-placeholder-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        background: rgba(0, 245, 212, 0.07);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .webcam-placeholder-icon svg {
+        width: 26px;
+        height: 26px;
+        stroke: rgba(0, 245, 212, 0.35);
+        fill: none;
+        stroke-width: 1.4;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      #webcamVideo {
+        width: 100%;
+        display: block;
+        min-height: 260px;
+        object-fit: cover;
+      }
+      .live-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        display: none;
+        align-items: center;
+        gap: 6px;
+        background: rgba(0, 0, 0, 0.55);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(0, 245, 212, 0.3);
+        border-radius: 999px;
+        padding: 4px 10px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: var(--teal);
+      }
+      .live-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--teal);
+        box-shadow: 0 0 6px var(--teal);
+        animation: pulse 1s ease-in-out infinite;
+      }
+
+      /* Buttons */
+      .btn-row {
+        display: flex;
+        gap: 10px;
+      }
+      .btn-detect {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 13px 20px;
+        background: linear-gradient(135deg, var(--orange), var(--pink));
+        border: none;
+        border-radius: 12px;
+        color: white;
+        font-family: "Syne", sans-serif;
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        cursor: pointer;
+        box-shadow: 0 0 28px rgba(247, 37, 133, 0.25);
+        transition: all 0.2s;
+      }
+      .btn-detect:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 40px rgba(247, 37, 133, 0.45);
+      }
+      .btn-detect:active {
+        transform: scale(0.98);
+      }
+      .btn-detect:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+      .btn-detect svg {
+        width: 15px;
+        height: 15px;
+        stroke: white;
+        fill: none;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        flex-shrink: 0;
+      }
+
+      .btn-cam {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        padding: 13px 16px;
+        border-radius: 12px;
+        border: 1px solid rgba(0, 245, 212, 0.3);
+        background: rgba(0, 245, 212, 0.08);
+        color: var(--teal);
+        font-family: "DM Sans", sans-serif;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+      }
+      .btn-cam:hover {
+        background: rgba(0, 245, 212, 0.15);
+      }
+      .btn-cam.active {
+        background: rgba(247, 37, 133, 0.12);
+        border-color: rgba(247, 37, 133, 0.35);
+        color: #ff6baa;
+      }
+      .btn-cam svg {
+        width: 14px;
+        height: 14px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 1.6;
+        stroke-linecap: round;
+        flex-shrink: 0;
+      }
+
+      /* Status */
+      .status-wrap {
+        margin-top: 16px;
+        min-height: 36px;
+      }
+      .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 500;
+        border: 1px solid;
+      }
+      .s-warn {
+        background: rgba(255, 159, 28, 0.12);
+        color: #ffb84d;
+        border-color: rgba(255, 159, 28, 0.3);
+      }
+      .s-loading {
+        background: rgba(0, 245, 212, 0.08);
+        color: var(--teal);
+        border-color: rgba(0, 245, 212, 0.25);
+      }
+      .s-success {
+        background: rgba(0, 245, 150, 0.1);
+        color: #00f596;
+        border-color: rgba(0, 245, 150, 0.3);
+      }
+      .s-error {
+        background: rgba(247, 37, 133, 0.1);
+        color: #ff6baa;
+        border-color: rgba(247, 37, 133, 0.3);
+      }
+      .s-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      .s-warn .s-dot {
+        background: #ffb84d;
+      }
+      .s-loading .s-dot {
+        background: var(--teal);
+        box-shadow: 0 0 8px var(--teal);
+        animation: pulse 1s infinite;
+      }
+      .s-success .s-dot {
+        background: #00f596;
+        box-shadow: 0 0 8px #00f596;
+      }
+      .s-error .s-dot {
+        background: #ff6baa;
+        box-shadow: 0 0 8px #ff6baa;
+      }
+
+      /* Result */
+      .result-wrap {
+        margin-top: 20px;
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(0, 0, 0, 0.3);
+        display: none;
+      }
+      .result-wrap img {
+        width: 100%;
+        display: block;
+      }
+      .result-label {
+        padding: 8px 14px;
+        font-size: 11px;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.3);
+        font-weight: 500;
+        border-top: 1px solid rgba(255, 255, 255, 0.07);
       }
     </style>
   </head>
   <body>
-    <div class="container">
-      <h2>🛡️ Safety Suit Detector</h2>
-      <p>Upload an image to detect safety suits</p>
+    <div class="bg-canvas"></div>
+    <div class="bg-grid"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
 
-      <input type="file" id="fileInput" accept="image/*" />
-      <br />
-      <button onclick="detect()">🔍 DETECT</button>
+    <div class="card">
+      <div class="pill"><span class="pill-dot"></span>PPE Compliance</div>
+      <h1>Safety <span>Suit</span> Detector</h1>
+      <p class="subtitle">
+        Upload an image or use your live webcam to detect safety suits
+      </p>
 
-      <div id="status"></div>
-      <div id="result"></div>
+      <!-- Tabs -->
+      <div class="tabs">
+        <button
+          class="tab active-upload"
+          id="tabUpload"
+          onclick="switchTab('upload')"
+        >
+          <svg viewBox="0 0 16 16">
+            <path
+              d="M8 11V3M5 6l3-3 3 3M2 12v1.5a1 1 0 001 1h10a1 1 0 001-1V12"
+            />
+          </svg>
+          Upload image
+        </button>
+        <button class="tab" id="tabCam" onclick="switchTab('cam')">
+          <svg viewBox="0 0 16 16">
+            <circle cx="8" cy="8" r="2.5" />
+            <path
+              d="M3 5h1.2l.9-1.5h5.8L11.8 5H13a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1V6a1 1 0 011-1z"
+            />
+          </svg>
+          Live webcam
+        </button>
+      </div>
+
+      <!-- Upload panel -->
+      <div id="panelUpload">
+        <div
+          class="upload-zone"
+          onclick="document.getElementById('fileInput').click()"
+        >
+          <input
+            type="file"
+            id="fileInput"
+            accept="image/*"
+            onchange="onFileChange(event)"
+          />
+          <div class="upload-icon">
+            <svg viewBox="0 0 20 20">
+              <path
+                d="M10 13V4M6 7l4-4 4 4M3 14v2a1 1 0 001 1h12a1 1 0 001-1v-2"
+              />
+            </svg>
+          </div>
+          <div class="upload-label">Click to upload an image</div>
+          <div class="upload-sub">JPG, PNG, WEBP supported</div>
+          <div id="fileName"></div>
+        </div>
+        <button
+          class="btn-detect"
+          id="detectUploadBtn"
+          onclick="detectUpload()"
+          style="width: 100%"
+        >
+          <svg viewBox="0 0 16 16">
+            <circle cx="6.5" cy="6.5" r="4.5" />
+            <path d="M11 11l3.5 3.5" />
+          </svg>
+          Detect Safety Suit
+        </button>
+      </div>
+
+      <!-- Webcam panel -->
+      <div id="panelCam" style="display: none">
+        <div class="webcam-zone">
+          <div class="webcam-placeholder" id="webcamPlaceholder">
+            <div class="webcam-placeholder-icon">
+              <svg viewBox="0 0 26 26">
+                <circle cx="13" cy="13" r="4" />
+                <path
+                  d="M5 9h1.8l1.5-2.5h9.4L19.2 9H21a1.5 1.5 0 011.5 1.5v9A1.5 1.5 0 0121 21H5a1.5 1.5 0 01-1.5-1.5v-9A1.5 1.5 0 015 9z"
+                />
+              </svg>
+            </div>
+            Webcam inactive — click Start Webcam
+          </div>
+          <video
+            id="webcamVideo"
+            autoplay
+            playsinline
+            style="display: none"
+          ></video>
+          <div class="live-badge" id="liveBadge">
+            <span class="live-dot"></span>LIVE
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-cam" id="btnCamToggle" onclick="toggleWebcam()">
+            <svg viewBox="0 0 16 16">
+              <circle cx="8" cy="8" r="2.5" />
+              <path
+                d="M3 5h1.2l.9-1.5h5.8L11.8 5H13a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1V6a1 1 0 011-1z"
+              />
+            </svg>
+            Start webcam
+          </button>
+          <button class="btn-detect" id="detectCamBtn" onclick="detectWebcam()">
+            <svg viewBox="0 0 16 16">
+              <circle cx="6.5" cy="6.5" r="4.5" />
+              <path d="M11 11l3.5 3.5" />
+            </svg>
+            Detect Safety Suit
+          </button>
+        </div>
+      </div>
+
+      <div class="status-wrap" id="statusWrap"></div>
+      <div class="result-wrap" id="resultWrap">
+        <img id="resultImg" src="" alt="Detection result" />
+        <div class="result-label">Detection output</div>
+      </div>
     </div>
 
     <script>
-      async function detect() {
-        const fileInput = document.getElementById("fileInput");
-        const status = document.getElementById("status");
-        const result = document.getElementById("result");
+      let webcamStream = null,
+        webcamActive = false;
 
+      function switchTab(tab) {
+        const isUpload = tab === "upload";
+        document.getElementById("tabUpload").className =
+          "tab" + (isUpload ? " active-upload" : "");
+        document.getElementById("tabCam").className =
+          "tab" + (!isUpload ? " active-cam" : "");
+        document.getElementById("panelUpload").style.display = isUpload
+          ? ""
+          : "none";
+        document.getElementById("panelCam").style.display = isUpload
+          ? "none"
+          : "";
+        clearStatus();
+        document.getElementById("resultWrap").style.display = "none";
+        if (isUpload && webcamActive) stopWebcam();
+      }
+
+      function onFileChange(e) {
+        const file = e.target.files[0];
+        document.getElementById("fileName").textContent = file ? file.name : "";
+        document.getElementById("resultWrap").style.display = "none";
+        clearStatus();
+      }
+
+      async function detectUpload() {
+        const fileInput = document.getElementById("fileInput");
         if (fileInput.files.length === 0) {
-          status.innerHTML =
-            "<span style='color:orange'>⚠️ Please select an image first!</span>";
+          setStatus("s-warn", "Please select an image first");
           return;
         }
+        const fd = new FormData();
+        fd.append("image", fileInput.files[0]);
+        await runDetect(fd, document.getElementById("detectUploadBtn"));
+      }
 
-        const formData = new FormData();
-        formData.append("image", fileInput.files[0]);
+      async function toggleWebcam() {
+        webcamActive ? stopWebcam() : await startWebcam();
+      }
 
-        status.innerHTML = "<span style='color:cyan'>⏳ Analyzing...</span>";
-        result.innerHTML = "";
-
+      async function startWebcam() {
         try {
-          const response = await fetch("/detect/image", {
+          webcamStream = await navigator.mediaDevices.getUserMedia({
+            video: { width: 640, height: 480, facingMode: "user" },
+          });
+          const vid = document.getElementById("webcamVideo");
+          vid.srcObject = webcamStream;
+          vid.style.display = "block";
+          document.getElementById("webcamPlaceholder").style.display = "none";
+          document.getElementById("liveBadge").style.display = "flex";
+          webcamActive = true;
+          const btn = document.getElementById("btnCamToggle");
+          btn.classList.add("active");
+          btn.innerHTML = `<svg viewBox="0 0 16 16" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round"><path d="M2 2l12 12M10 5.5A4 4 0 015.5 10M6 2.5A4 4 0 0113.5 10"/></svg> Stop webcam`;
+        } catch (err) {
+          setStatus("s-error", "Cannot access webcam: " + err.message);
+        }
+      }
+
+      function stopWebcam() {
+        if (webcamStream) webcamStream.getTracks().forEach((t) => t.stop());
+        webcamStream = null;
+        webcamActive = false;
+        const vid = document.getElementById("webcamVideo");
+        vid.srcObject = null;
+        vid.style.display = "none";
+        document.getElementById("webcamPlaceholder").style.display = "flex";
+        document.getElementById("liveBadge").style.display = "none";
+        const btn = document.getElementById("btnCamToggle");
+        btn.classList.remove("active");
+        btn.innerHTML = `<svg viewBox="0 0 16 16" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round"><circle cx="8" cy="8" r="2.5"/><path d="M3 5h1.2l.9-1.5h5.8L11.8 5H13a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1V6a1 1 0 011-1z"/></svg> Start webcam`;
+        clearStatus();
+      }
+
+      async function detectWebcam() {
+        if (!webcamActive) {
+          setStatus("s-warn", "Please start the webcam first");
+          return;
+        }
+        const vid = document.getElementById("webcamVideo");
+        const canvas = document.createElement("canvas");
+        canvas.width = vid.videoWidth || 640;
+        canvas.height = vid.videoHeight || 480;
+        canvas
+          .getContext("2d")
+          .drawImage(vid, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(
+          async (blob) => {
+            const fd = new FormData();
+            fd.append("image", blob, "webcam.jpg");
+            await runDetect(fd, document.getElementById("detectCamBtn"));
+          },
+          "image/jpeg",
+          0.92,
+        );
+      }
+
+      async function runDetect(formData, btn) {
+        const orig = btn.innerHTML;
+        btn.disabled = true;
+        btn.textContent = "Analyzing...";
+        setStatus("s-loading", "Analyzing image...");
+        document.getElementById("resultWrap").style.display = "none";
+        try {
+          const res = await fetch("/detect/image", {
             method: "POST",
             body: formData,
           });
-          const data = await response.json();
-
+          const data = await res.json();
           if (data.success) {
-            status.innerHTML = `<span style='color:#4caf50'>✅ Found ${data.count} safety suit(s)!</span>`;
-            result.innerHTML = `<img src="data:image/jpeg;base64,${data.image}" alt="Result">`;
+            setStatus(
+              "s-success",
+              `Detected ${data.count} safety suit${data.count !== 1 ? "s" : ""}`,
+            );
+            document.getElementById("resultImg").src =
+              "data:image/jpeg;base64," + data.image;
+            document.getElementById("resultWrap").style.display = "block";
           } else {
-            status.innerHTML = `<span style='color:red'>❌ Error: ${data.error}</span>`;
+            setStatus("s-error", "Error: " + (data.error || "Unknown error"));
           }
-        } catch (error) {
-          status.innerHTML =
-            "<span style='color:red'>❌ Connection failed. Check if server is running.</span>";
+        } catch (e) {
+          setStatus(
+            "s-error",
+            "Connection failed — check if server is running",
+          );
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = orig;
         }
+      }
+
+      function setStatus(type, text) {
+        document.getElementById("statusWrap").innerHTML =
+          `<div class="status-badge ${type}"><span class="s-dot"></span>${text}</div>`;
+      }
+      function clearStatus() {
+        document.getElementById("statusWrap").innerHTML = "";
       }
     </script>
   </body>
