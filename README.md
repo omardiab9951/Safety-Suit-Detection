@@ -118,17 +118,7 @@ model.predict(source="site_footage.mp4", conf=0.5, save=True)
 
 Automated safety suit detection shifts the paradigm from **reactive incident response** to **proactive, real-time prevention** — at a fraction of the cost of dedicated safety personnel and with zero fatigue or blind spots.
 
----
 
-## 🔭 Roadmap & Future Work
-
-- [ ] Expand to full PPE suite detection: helmets, gloves, safety goggles, high-vis vests
-- [ ] Live alert integration: Slack, SMS, and on-site alarm systems
-- [ ] Edge deployment: ONNX / TensorRT export for NVIDIA Jetson and Raspberry Pi
-- [ ] Multi-camera tracking with worker ID association across frames
-- [ ] Combined pipeline with the [Goggles Detection Model](https://github.com/omardiab9951/Googles-Detection-Model) for unified PPE compliance
-
----
 
 ## 👤 Author
 
